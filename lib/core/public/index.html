@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+        #container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 40px 80px;
+            margin-top: 100px;
+        }
+
+        .item-parent {
+            display: flex;
+            position: relative;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 16px;
+            width: 280px;
+            height: 280px;
+            margin-right: 16px;
+        }
+
+        .item-img {
+            height: 200px;
+            width: 200px;
+            object-fit: contain;
+            margin-right: 20px;
+            cursor: pointer;
+        }
+
+        .item-img:hover ~ .item-tip {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-name {
+            margin-top: 12px;
+            color: #333;
+            font-size: 16px;
+            word-break: break-all;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .mask {
+            position: fixed;
+            height: 100%;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.80);
+            display: none;
+            justify-content: center;
+            align-content: center;
+            cursor: pointer;
+            z-index: 9999;
+        }
+
+        .tipTitle {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .item-tip {
+            display: none;
+            background: rgba(0, 0, 0, 0.60);
+            border-radius: 6px;
+            padding: 12px;
+            color: #fff;
+            position: absolute;
+            text-align: left;
+            max-width: 300px;
+            word-break: break-all;
+            top: -120px;
+            z-index: 99;
+        }
+
+        .item-tip:hover {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .previewImgBox {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .menuBox {
+            background: #fff;
+            box-shadow: 5px 5px 15px 0 rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            display: none;
+        }
+
+        .menuBox > div {
+            width: 200px;
+            text-align: center;
+            color: #333;
+            padding: 12px 0;
+            cursor: pointer;
+        }
+
+        .menuBox > div:hover {
+            background: #eee;
+            border-radius: 6px;
+        }
+
+        #previewImg {
+            object-fit: contain;
+            width: 100%;
+            height: 100%;
+        }
+
+        .headerBox {
+            display: flex;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            background: #fff;
+            z-index: 9;
+            top: 0;
+        }
+
+        #currentPath {
+            margin: 40px 0 40px 100px;
+            font-size: 28px;
+            font-weight: 600;
+            color: #333
+        }
+
+        #toast {
+            display: none;
+            padding: 16px 26px;
+            background: #00000090;
+            color: #fff;
+            font-size: 18px;
+            border-radius: 4px;
+            position: fixed;
+            left: calc(50vw);
+            top: 150px
+        }
+
+        .themeBox {
+            height: 110px;
+            width: 110px;
+            right: 0;
+            top: 0;
+            position: absolute;
+            cursor: pointer;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .gradientBox {
+            width: 0;
+            height: 0;
+            box-shadow: 10px 10px 70px 70px #f7de95
+        }
+
+        /*    loding    */
+        .loadingBox {
+            margin-left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: block;
+        }
+
+        .loading {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 85, 255, .05);
+            -webkit-animation: loading 3s linear infinite;
+            animation: loading 3s linear infinite
+        }
+
+        .loading:after {
+            content: "";
+            display: block;
+            width: 50%;
+            height: 50%;
+            background: linear-gradient(45deg, transparent 50%, rgba(0, 85, 255, .2) 100%)
+        }
+
+        @-webkit-keyframes loading {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        @keyframes loading {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /*    loading  end   */
+
+        /*    close  */
+        .closeBox {
+            height: 50px;
+            width: 50px;
+            border-radius: 50%;
+            background: #eee;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            left: 50%;
+            bottom: 10px;
+        }
+
+        .close {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .close:before {
+            position: absolute;
+            content: "";
+            width: 2px;
+            height: 22px;
+            background: #999;
+            transform: rotate(45deg);
+            top: -2px;
+            left: 8px;
+        }
+
+        .close:after {
+            content: "";
+            position: absolute;
+            width: 2px;
+            height: 22px;
+            background: #999;
+            transform: rotate(-45deg);
+            top: -2px;
+            left: 8px;
+        }
+
+        /*    close end   */
+    </style>
+</head>
+
+<body>
+<div class="headerBox" id="header">
+    <div class="closeBox" id="closeBox" onclick="handleCloseHeader()">
+        <div class="close"></div>
+    </div>
+    <div id="currentPath"></div>
+    <div class="loadingBox" id="loading">
+        <div class="loading"></div>
+    </div>
+    <div class="themeBox" id="theme" onclick="changeTheme()">
+        <div class="gradientBox" id="gradient"></div>
+    </div>
+</div>
+<div id="container"></div>
+<div class="menuBox" id="menuBox">
+    <div onclick="delImg()">删除</div>
+    <div onclick="handleOpen()">打开文件所在位置</div>
+</div>
+<div class="mask" id="maskBox" onclick="handleOverlapClick()">
+    <div class="previewImgBox">
+        <img src="" id="previewImg" alt="">
+    </div>
+</div>
+<div id="toast"></div>
+<script>
+    const WS_EVENT_TYPE = {
+        GET_IMAGE: 'GET_IMAGE'
+    }
+    const socketListener = new Map()
+    const BASE_URL = 'http://127.0.0.1:9527'
+    const WS_URL = 'ws://127.0.0.1:8848'
+    let ws;
+    let time = 0;
+    let currentParentDiv = null
+    let theme = 'white'
+
+    function showToast(text) {
+        const toastDiv = document.getElementById('toast')
+        toastDiv.style.display = 'block'
+        toastDiv.textContent = text
+        setTimeout(() => {
+            toastDiv.style.display = 'none'
+        }, 600)
+    }
+
+
+    // 事件监听
+    function listener() {
+        window.addEventListener('scroll', function (e) {
+            const headerDiv = document.getElementById('header')
+            const closeBox = document.getElementById('closeBox')
+            const maskBox = document.getElementById('maskBox')
+
+            if (window.scrollY === 0) {
+                headerDiv.style.boxShadow = ''
+                closeBox.style.display = 'none'
+                headerDiv.style.display = 'flex'
+
+            } else {
+                const shadow = theme === 'white' ? '#eee' : '#fff'
+
+                headerDiv.style.boxShadow = `0 4px 20px  ${shadow}`
+                closeBox.style.display = 'flex'
+            }
+
+            maskBox.style.display = 'none'
+        })
+        //滚轮
+        document.body.addEventListener('wheel', function (e) {
+            const menu = document.getElementById('menuBox');
+            if (menu.style.display === 'block') {
+                menu.style.display = `none`;
+            }
+
+        })
+
+        //右键菜单
+        document.getElementById('container').addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+
+            if (e.target.currentSrc && e.target.className === 'item-img') {
+                const menu = document.getElementById('menuBox');
+                menu.style.position = 'fixed';
+                menu.style.left = `${e.clientX}px`;
+                menu.style.top = `${e.clientY}px`;
+                menu.style.display = `block`;
+                menu.dataset.currentSrc = e.target.currentSrc
+
+                currentParentDiv = e.target.offsetParent
+
+                document.body.appendChild(menu);
+
+            }
+        })
+
+        //body点击
+        document.body.addEventListener('click', () => {
+            const menu = document.getElementById('menuBox');
+            menu.style.display = `none`;
+        })
+
+        //鼠标按下
+        document.getElementById('container').addEventListener('mousedown', (e) => {
+            if (e.target.className === 'item-name' && e.button === 0) {
+                e.target.style.color = '#eee'
+            }
+        })
+
+        //鼠标抬起
+        document.getElementById('container').addEventListener('mouseup', (e) => {
+            if (e.target.className === 'item-name' && e.button === 0) {
+                navigator.clipboard.writeText(e.target.innerText)
+                e.target.style.color = '#333'
+                showToast('复制文件名成功')
+            }
+        })
+
+        //鼠标移出
+        document.getElementById('container').addEventListener('mouseout', (e) => {
+            if (e.target.className === 'item-name' && e.button === 0) {
+                e.target.style.color = '#333'
+            }
+        })
+
+        //图片单击事件委托
+        document.getElementById('container').addEventListener('click', (e) => {
+
+            if (e.target.currentSrc) {
+                const maskBox = document.getElementById('maskBox')
+                const previewImg = document.getElementById('previewImg')
+
+                maskBox.style.display = 'flex'
+                previewImg.src = e.target.currentSrc
+            }
+        })
+    }
+
+    function changeTheme() {
+        const headerDiv = document.getElementById('header')
+        const gradientDiv = document.getElementById('gradient')
+        const currentPathDiv = document.getElementById('currentPath')
+
+        if (theme === 'white') {
+            document.body.style.background = '#f7de95'
+            headerDiv.style.background = '#f7de95'
+            currentPathDiv.style.color = '#fff'
+            headerDiv.style.boxShadow = '0 4px 20px #fff'
+
+            gradientDiv.style.boxShadow = '10px 10px 70px 70px #fff'
+            theme = 'yellow'
+        } else {
+            document.body.style.background = '#fff'
+            headerDiv.style.background = '#fff'
+            headerDiv.style.boxShadow = '0 4px 20px #eee'
+            currentPathDiv.style.color = '#333'
+            gradientDiv.style.boxShadow = '10px 10px 70px 70px #f7de95'
+            theme = 'white'
+        }
+    }
+
+    function handleCloseHeader() {
+        const headerDiv = document.getElementById('header')
+        headerDiv.style.display = 'none'
+    }
+
+
+    function handleOverlapClick() {
+        const maskBox = document.getElementById('maskBox')
+        maskBox.style.display = 'none'
+    }
+
+    async function delImg() {
+        try {
+            const menu = document.getElementById('menuBox');
+            const imgPath = menu.dataset.currentSrc.replace(BASE_URL, '')
+
+            const res = await fetch(BASE_URL + `/delImg?imgPath=${encodeURIComponent(imgPath)}`)
+            const {msg, code} = await res.json()
+            if (code === 200) {
+                currentParentDiv.remove()
+                showToast(msg)
+            }
+        } catch (e) {
+            console.log('删除失败', e)
+            showToast('删除失败')
+        }
+    }
+
+    async function handleOpen() {
+        try {
+            const menu = document.getElementById('menuBox');
+            const currentSrc = menu.dataset.currentSrc
+            const imgPath = currentSrc.replace(BASE_URL, '')
+
+            await fetch(BASE_URL + `/open?imgPath=${imgPath}`)
+
+        } catch (e) {
+            console.log('打开失败', e)
+        }
+    }
+
+    function renderInfo(data) {
+        const currentPathDiv = document.getElementById('currentPath')
+        currentPathDiv.textContent = `当前路径：${data.currentPath}`
+    }
+
+    async function getDirInfo() {
+        try {
+            const res = await fetch(BASE_URL + '/getDirInfo')
+            const data = await res.json()
+            renderInfo(data)
+        } catch (e) {
+            console.log('获取目录信息失败', e)
+        }
+    }
+
+
+    function renderImg(data, requestId, done) {
+        const fragment = document.createDocumentFragment();
+        const container = document.getElementById('container');
+
+        data.forEach((item) => {
+            const {path, name, size: _size} = item
+            const size = (_size / 1024).toFixed(0)
+            const parentDiv = document.createElement('div')
+            const img = document.createElement('img')
+            const nameDiv = document.createElement('div')
+            const tipDiv = document.createElement('div')
+
+            parentDiv.className = 'item-parent'
+
+            img.src = path
+            img.className = "item-img"
+
+            nameDiv.className = 'item-name'
+            nameDiv.textContent = name
+
+            tipDiv.className = 'item-tip'
+            tipDiv.innerHTML = `<div><span class="tipTitle">size</span>：${size}KB</div><div><span class="tipTitle">path</span>：${path} </div>`
+
+            parentDiv.appendChild(img)
+            parentDiv.appendChild(nameDiv)
+            parentDiv.appendChild(tipDiv)
+
+            fragment.appendChild(parentDiv)
+        })
+
+        container.appendChild(fragment)
+
+        if (done) {
+            socketListener.delete(requestId)
+            const loadingDiv = document.getElementById('loading')
+            loadingDiv.style.display = 'none'
+        }
+    }
+
+    function socketSend(eventType) {
+        const requestId = `${eventType}_${Date.now()}`
+        const params = {
+            eventType,
+            requestId
+        }
+
+        socketListener.set(requestId, renderImg)
+        ws.send(JSON.stringify(params));
+    }
+
+    function getImageData() {
+        socketSend(WS_EVENT_TYPE.GET_IMAGE)
+    }
+
+    function msgHandler(socketMsg) {
+        const {requestId, eventType, data, done} = socketMsg
+
+        if (eventType === WS_EVENT_TYPE.GET_IMAGE) {
+            const callback = socketListener.get(requestId)
+            callback && callback(data, requestId, done)
+        }
+    }
+
+    function reConnect() {
+        const timerId = setTimeout(() => {
+            if (time > 5000) {
+                clearTimeout(timerId)
+                return
+            }
+            initSocket()
+            time += 1000
+        }, time)
+    }
+
+    function initSocket() {
+        ws = new WebSocket(WS_URL);
+        ws.onopen = function () {
+            // console.log('SOCKET_OPEN')
+            getImageData()
+        }
+
+        ws.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+
+            msgHandler(data)
+        }
+
+        ws.onclose = function (e) {
+            // console.log("SOCKET_CLOSE");
+        }
+
+        ws.onerror = function (error) {
+            reConnect()
+            // console.log('SOCKET_ERROR::', error);
+        }
+    }
+
+    function mounted() {
+        getDirInfo()
+        listener()
+        initSocket()
+    }
+
+    window.onload = mounted
+
+</script>
+</body>
+
+</html>
