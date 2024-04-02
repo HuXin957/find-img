@@ -131,8 +131,8 @@
         }
 
         #currentPath {
-            margin: 40px 0 40px 100px;
-            font-size: 28px;
+            margin: 40px 0 40px 0;
+            font-size: 18px;
             font-weight: 600;
             color: #333
         }
@@ -168,9 +168,10 @@
 
         /*    loding    */
         .loadingBox {
-            margin-left: 20px;
-            width: 60px;
-            height: 60px;
+            margin-left: -38px;
+            margin-right: 8px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             overflow: hidden;
             display: block;
@@ -251,6 +252,21 @@
         }
 
         /*    close end   */
+
+        .pathBox {
+            margin-left: 100px;
+        }
+
+        #currentDirBox {
+            display: flex;
+            align-items: center;
+        }
+
+        .currentDir {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
     </style>
 </head>
 
@@ -259,10 +275,16 @@
     <div class="closeBox" id="closeBox" onclick="handleCloseHeader()">
         <div class="close"></div>
     </div>
-    <div id="currentPath"></div>
-    <div class="loadingBox" id="loading">
-        <div class="loading"></div>
+    <div class="pathBox">
+        <div id="currentPath"></div>
+        <div id="currentDirBox">
+            <div class="loadingBox" id="loading">
+                <div class="loading"></div>
+            </div>
+            <div id="currentDir"></div>
+        </div>
     </div>
+
     <div class="themeBox" id="theme" onclick="changeTheme()">
         <div class="gradientBox" id="gradient"></div>
     </div>
@@ -457,7 +479,7 @@
 
     function renderInfo(data) {
         const currentPathDiv = document.getElementById('currentPath')
-        currentPathDiv.textContent = `当前路径：${data.currentPath}`
+        currentPathDiv.textContent = `当前目录：${data.currentPath}`
     }
 
     async function getDirInfo() {
@@ -474,6 +496,7 @@
     function renderImg(data, requestId, done) {
         const fragment = document.createDocumentFragment();
         const container = document.getElementById('container');
+        const currentDir = document.getElementById('currentDir')
 
         data.forEach((item) => {
             const {path, name, size: _size} = item
@@ -494,6 +517,7 @@
             tipDiv.className = 'item-tip'
             tipDiv.innerHTML = `<div><span class="tipTitle">size</span>：${size}KB</div><div><span class="tipTitle">path</span>：${path} </div>`
 
+            currentDir.textContent = `正在扫描：${item.currentDir}`
             parentDiv.appendChild(img)
             parentDiv.appendChild(nameDiv)
             parentDiv.appendChild(tipDiv)
@@ -505,8 +529,8 @@
 
         if (done) {
             socketListener.delete(requestId)
-            const loadingDiv = document.getElementById('loading')
-            loadingDiv.style.display = 'none'
+            const currentDirDiv = document.getElementById('currentDirBox')
+            currentDirDiv.style.display = 'none'
         }
     }
 
