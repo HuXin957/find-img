@@ -292,7 +292,7 @@
 <div id="container"></div>
 <div class="menuBox" id="menuBox">
     <div onclick="delImg()">删除</div>
-    <div onclick="handleOpen()">打开文件所在位置</div>
+    <div onclick="handleOpen()">打开</div>
 </div>
 <div class="mask" id="maskBox" onclick="handleOverlapClick()">
     <div class="previewImgBox">
@@ -515,7 +515,7 @@
             nameDiv.textContent = name
 
             tipDiv.className = 'item-tip'
-            tipDiv.innerHTML = `<div><span class="tipTitle">size</span>：${size}KB</div><div><span class="tipTitle">path</span>：${path} </div>`
+            tipDiv.innerHTML = `<div><span class="tipTitle">size</span>：${size}KB</div><div><span class="tipTitle">path</span>：${decodeURIComponent(path)} </div>`
 
             currentDir.textContent = `正在扫描：${item.currentDir}`
             parentDiv.appendChild(img)
