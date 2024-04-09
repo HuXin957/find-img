@@ -7,7 +7,7 @@
 > 例如前端项目中的img目录，大家都在往里面放图片，但对于别人来说并不知道这张图片的存在，所以容易造成文件冗余。findImg即可让所有图片在浏览中预览，从而更直观的了解文件信息。
 > 
 > # How?
-> npm install findImg -g
+> npm install find-img -g
 > 
 > 在目录下输入启动命令
 > C:\a\b\c > findImg run
