@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>find-img</title>
     <style>
         * {
             margin: 0;
@@ -13,11 +13,13 @@
         }
 
         #container {
-            display: flex;
-            flex-wrap: wrap;
             padding: 40px 80px;
             margin-top: 100px;
-            justify-content: center;
+        }
+
+        .dirContainer {
+            display: flex;
+            flex-wrap: wrap;
         }
 
         .item-parent {
@@ -132,7 +134,7 @@
 
         #currentPath {
             margin: 40px 0 40px 0;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 600;
             color: #333
         }
@@ -267,6 +269,15 @@
             color: #333;
             font-weight: 500;
         }
+
+        .dirTitle {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 40px;
+            margin-top: 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -311,6 +322,7 @@
     let time = 0;
     let currentParentDiv = null
     let theme = 'white'
+    let dirName, dirContainer, contentContainer
 
     function showToast(text) {
         const toastDiv = document.getElementById('toast')
@@ -492,11 +504,35 @@
         }
     }
 
+    function createDirContainer(_dirName) {
+        const contentDiv = document.createElement('div')//一个目录下的大div
+        const dirDiv = document.createElement('div')//装图片的
+        const dirTitle = document.createElement('div')
+
+        // contentDiv.className = ''
+
+        dirTitle.textContent = "▼" + "  " + _dirName
+        dirTitle.className = 'dirTitle'
+        dirTitle.onclick = function () {
+            const isOpen = ['flex', ""].includes(dirDiv.style.display)
+            dirDiv.style.display = isOpen ? 'none' : 'flex'
+            dirTitle.textContent = (isOpen ? "▶" : "▼") + "  " + _dirName
+        }
+
+        dirDiv.className = 'dirContainer'
+        dirDiv.appendChild(dirTitle)
+
+        contentDiv.appendChild(dirTitle)
+        contentDiv.appendChild(dirDiv)
+
+        return [dirDiv, contentDiv]
+    }
+
 
     function renderImg(data, requestId, done) {
-        const fragment = document.createDocumentFragment();
         const container = document.getElementById('container');
         const currentDir = document.getElementById('currentDir')
+
 
         data.forEach((item) => {
             const {path, name, size: _size} = item
@@ -518,14 +554,20 @@
             tipDiv.innerHTML = `<div><span class="tipTitle">size</span>：${size}KB</div><div><span class="tipTitle">path</span>：${decodeURIComponent(path)} </div>`
 
             currentDir.textContent = `正在扫描：${item.currentDir}`
+
             parentDiv.appendChild(img)
             parentDiv.appendChild(nameDiv)
             parentDiv.appendChild(tipDiv)
 
-            fragment.appendChild(parentDiv)
+            if (item.currentDir !== dirName) {
+                dirName = item.currentDir;
+                [dirContainer, contentContainer] = createDirContainer(item.currentDir)
+                container.appendChild(contentContainer)
+            }
+
+            dirContainer.appendChild(parentDiv)
         })
 
-        container.appendChild(fragment)
 
         if (done) {
             socketListener.delete(requestId)
