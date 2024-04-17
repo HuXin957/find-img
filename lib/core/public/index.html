@@ -52,6 +52,10 @@
             word-break: break-all;
             text-align: center;
             cursor: pointer;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            width: 10.444vw;
         }
 
         .mask {
@@ -79,6 +83,7 @@
             color: #fff;
             position: absolute;
             text-align: left;
+            min-width: 200px;
             max-width: 300px;
             word-break: break-all;
             top: -120px;
@@ -278,6 +283,16 @@
             font-weight: 600;
             cursor: pointer;
         }
+        .slider{
+            position:absolute;
+            right:200px;
+            display: flex;
+            align-items: center;
+        }
+        #showCount{
+            margin-left: 6px;
+            width:30px
+        }
     </style>
 </head>
 
@@ -295,7 +310,10 @@
             <div id="currentDir"></div>
         </div>
     </div>
-
+    <div class="slider">
+        <input type="range" value="1" min="0.5" max="1.5" step="0.1" onchange="updateValue(this.value)">
+        <span id="showCount">1</span>
+    </div>
     <div class="themeBox" id="theme" onclick="changeTheme()">
         <div class="gradientBox" id="gradient"></div>
     </div>
@@ -448,6 +466,27 @@
         }
     }
 
+    function updateValue(value){
+        const showCount = document.getElementById('showCount')
+        const parentArr = document.getElementsByClassName('item-parent')
+
+        Array.from(parentArr).forEach(item=>{
+            const imgStyle = item.childNodes[0].style
+            const nameStyle = item.childNodes[1].style
+            const parentStyle = item.style
+            const pv = 10.444 * value
+            const iv = 6.944 * value
+
+            parentStyle.width = pv + 'vw'
+            parentStyle.height = 10.444 * value + 'vw'
+            imgStyle.width = iv + 'vw'
+            imgStyle.height = iv + 'vw'
+            nameStyle.width = pv + 'vw'
+        })
+
+        showCount.innerText = value
+    }
+
     function handleCloseHeader() {
         const headerDiv = document.getElementById('header')
         headerDiv.style.display = 'none'
@@ -511,11 +550,16 @@
 
         dirTitle.textContent = "▼" + "  " + _dirName
         dirTitle.className = 'dirTitle'
-        dirTitle.onclick = function () {
+        dirTitle.onmouseup= function () {
+            const selection = window.getSelection()
+
+            if (selection?.type === 'Range') return
+
             const isOpen = ['flex', ""].includes(dirDiv.style.display)
             dirDiv.style.display = isOpen ? 'none' : 'flex'
             dirTitle.textContent = (isOpen ? "▶" : "▼") + "  " + _dirName
         }
+
 
         dirDiv.className = 'dirContainer'
         dirDiv.appendChild(dirTitle)
@@ -534,7 +578,7 @@
 
         data.forEach((item) => {
             const {path, name, size: _size} = item
-            const size = (_size / 1024).toFixed(0)
+            const size = (_size / 1024).toFixed(2)
             const parentDiv = document.createElement('div')
             const img = document.createElement('img')
             const nameDiv = document.createElement('div')
