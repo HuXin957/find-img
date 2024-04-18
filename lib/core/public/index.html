@@ -315,6 +315,7 @@
   </head>
 
   <body>
+    <div id="svgBox"></div>
     <div class="headerBox" id="header">
       <div class="closeBox" id="closeBox" onclick="handleCloseHeader()">
         <div class="close"></div>
@@ -355,6 +356,7 @@
         <div class="gradientBox" id="gradient"></div>
       </div>
     </div>
+
     <div id="container"></div>
     <div class="menuBox" id="menuBox">
       <div onclick="delImg()">删除</div>
@@ -373,6 +375,9 @@
       const socketListener = new Map();
       const BASE_URL = "http://127.0.0.1:9527";
       const WS_URL = "ws://127.0.0.1:8848";
+      const ns = "http://www.w3.org/2000/svg";
+      const childNS = "http://www.w3.org/1999/xlink";
+
       let ws;
       let time = 0;
       let currentParentDiv = null;
@@ -616,46 +621,84 @@
         return [dirDiv, contentDiv];
       }
 
-      function renderImg(data, requestId, done) {
-        const container = document.getElementById("container");
-        const currentDir = document.getElementById("currentDir");
+      function handleImg(item) {
+        const { path, name, type, svgNode } = item;
+        let imgs = [];
 
-        data.forEach((item) => {
-          const { path, name, size: _size } = item;
-          const size = (_size / 1024).toFixed(2);
-          const parentDiv = document.createElement("div");
+        if (type === "SYMBOL_SVG") {
+          const svgBox = document.getElementById("svgBox");
+          const svgContent = document.createElement("div");
+
+          svgContent.innerHTML = decodeURIComponent(svgNode);
+
+          svgBox.appendChild(svgContent);
+          name.forEach((svgItem) => {
+            const svg = document.createElementNS(ns, "svg");
+            const child = document.createElementNS(ns, "use");
+            child.setAttributeNS(childNS, "xlink:href", "#" + svgItem);
+
+            svg.appendChild(child);
+
+            imgs.push({ img: svg, name: svgItem });
+          });
+        } else {
           const img = document.createElement("img");
-          const nameDiv = document.createElement("div");
-          const tipDiv = document.createElement("div");
-
-          parentDiv.className = "item-parent";
-
           img.src = path;
           img.className = "item-img";
 
-          nameDiv.className = "item-name";
-          nameDiv.textContent = name;
+          imgs.push({ img, name });
+        }
 
-          tipDiv.className = "item-tip";
-          tipDiv.innerHTML = `<div><span class="tipTitle">size</span>：${size}KB</div><div><span class="tipTitle">path</span>：${decodeURIComponent(
-            path
-          )} </div>`;
+        return imgs;
+      }
 
-          currentDir.textContent = `正在扫描：${item.currentDir}`;
+      function appendImg(img, item) {
+        const container = document.getElementById("container");
+        const currentDir = document.getElementById("currentDir");
+        const { path, name, size: _size } = item;
+        const size = (_size / 1024).toFixed(2);
+        const parentDiv = document.createElement("div");
+        const nameDiv = document.createElement("div");
+        const tipDiv = document.createElement("div");
 
-          parentDiv.appendChild(img);
-          parentDiv.appendChild(nameDiv);
-          parentDiv.appendChild(tipDiv);
+        parentDiv.className = "item-parent";
 
-          if (item.currentDir !== dirName) {
-            dirName = item.currentDir;
-            [dirContainer, contentContainer] = createDirContainer(
-              item.currentDir
-            );
-            container.appendChild(contentContainer);
-          }
+        nameDiv.className = "item-name";
+        nameDiv.textContent = name;
 
-          dirContainer.appendChild(parentDiv);
+        tipDiv.className = "item-tip";
+        tipDiv.innerHTML = `<div><span class="tipTitle">size</span>：${size}KB</div><div><span class="tipTitle">path</span>：${decodeURIComponent(
+          path
+        )} </div>`;
+
+        currentDir.textContent = `正在扫描：${item.currentDir}`;
+
+        parentDiv.appendChild(img);
+        parentDiv.appendChild(nameDiv);
+        parentDiv.appendChild(tipDiv);
+
+        if (item.currentDir !== dirName) {
+          dirName = item.currentDir;
+          [dirContainer, contentContainer] = createDirContainer(
+            item.currentDir
+          );
+          container.appendChild(contentContainer);
+        }
+
+        dirContainer.appendChild(parentDiv);
+      }
+
+      function renderImg(data, requestId, done) {
+        data.forEach((item) => {
+          const imgArr = handleImg(item);
+
+          imgArr.forEach((imgItem) => {
+            const _item = { ...item };
+
+            _item.name = imgItem.name;
+
+            appendImg(imgItem.img, _item);
+          });
         });
 
         if (done) {
