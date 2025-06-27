@@ -1,6 +1,6 @@
 {
   "name": "find-img",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "findImg",
   "main": "index.js",
   "bin": {
